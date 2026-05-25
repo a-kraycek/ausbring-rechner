@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ausbringmenge Rechner</title>
+  <meta name="theme-color" content="#2f7d4f">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIINfQFf9C2uM5rKz7Jb9mJ7vD7d/3YB8v0="
+    crossorigin=""
+  >
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f2ec;
+      --panel: #ffffff;
+      --ink: #1d2621;
+      --muted: #637067;
+      --line: #d7ddd4;
+      --field: #f8faf7;
+      --green: #2f7d4f;
+      --green-dark: #215b3a;
+      --amber: #d9962d;
+      --blue: #2d6f9f;
+      --danger: #a6422d;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      min-height: 100vh;
+    }
+
+    .map-wrap {
+      position: relative;
+      z-index: 0;
+      overflow: hidden;
+      min-width: 0;
+      min-height: 54vh;
+      background: #d9e3d2;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 100vh;
+    }
+
+    .map-note {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      z-index: 500;
+      max-width: min(520px, calc(100% - 32px));
+      padding: 10px 12px;
+      border: 1px solid rgba(29, 38, 33, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+      box-shadow: 0 10px 24px rgba(29, 38, 33, 0.12);
+    }
+
+    .panel {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px;
+      border-left: 1px solid var(--line);
+      background: var(--panel);
+      overflow-y: auto;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--green-dark);
+      font-size: 25px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .section {
+      display: grid;
+      gap: 12px;
+      padding-top: 4px;
+    }
+
+    .section-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .leaflet-container {
+      z-index: 0;
+    }
+
+    .leaflet-pane,
+    .leaflet-tile,
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow,
+    .leaflet-tile-container,
+    .leaflet-pane > svg,
+    .leaflet-pane > canvas,
+    .leaflet-zoom-box,
+    .leaflet-image-layer,
+    .leaflet-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .leaflet-container {
+      overflow: hidden;
+      outline: 0;
+      background: #d9e3d2;
+      touch-action: pan-x pan-y;
+    }
+
+    .leaflet-tile,
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow {
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .leaflet-tile {
+      visibility: hidden;
+      border: 0;
+      filter: inherit;
+    }
+
+    .leaflet-tile-loaded {
+      visibility: inherit;
+    }
+
+    .leaflet-zoom-animated {
+      transform-origin: 0 0;
+    }
+
+    .leaflet-map-pane {
+      z-index: 400;
+    }
+
+    .leaflet-tile-pane {
+      z-index: 200;
+    }
+
+    .leaflet-overlay-pane {
+      z-index: 400;
+    }
+
+    .leaflet-shadow-pane {
+      z-index: 500;
+    }
+
+    .leaflet-marker-pane {
+      z-index: 600;
+    }
+
+    .leaflet-tooltip-pane {
+      z-index: 650;
+    }
+
+    .leaflet-popup-pane {
+      z-index: 700;
+    }
+
+    .leaflet-control {
+      position: relative;
+      z-index: 800;
+      pointer-events: visiblePainted;
+      pointer-events: auto;
+    }
+
+    .leaflet-top,
+    .leaflet-bottom {
+      position: absolute;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .leaflet-top {
+      top: 0;
+    }
+
+    .leaflet-right {
+      right: 0;
+    }
+
+    .leaflet-bottom {
+      bottom: 0;
+    }
+
+    .leaflet-left {
+      left: 0;
+    }
+
+    .leaflet-control-zoom {
+      margin: 12px;
+      border: 1px solid rgba(29, 38, 33, 0.18);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(29, 38, 33, 0.16);
+    }
+
+    .leaflet-control-zoom a {
+      display: block;
+      width: 34px;
+      height: 34px;
+      color: var(--ink);
+      line-height: 34px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 22px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .leaflet-control-zoom a:last-child {
+      border-bottom: 0;
+    }
+
+    .leaflet-control-attribution {
+      margin: 0;
+      padding: 3px 6px;
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .leaflet-control-attribution a {
+      color: var(--green-dark);
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--field);
+      color: var(--ink);
+      font: inherit;
+      font-size: 17px;
+      padding: 9px 11px;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--green);
+      outline: 3px solid rgba(47, 125, 79, 0.18);
+    }
+
+    .choice {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--field);
+    }
+
+    .choice input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .choice label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .choice input:checked + span {
+      color: #fff;
+      background: var(--green);
+      box-shadow: 0 4px 12px rgba(47, 125, 79, 0.2);
+    }
+
+    .choice span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 42px;
+      border-radius: 6px;
+      padding: 0 8px;
+    }
+
+    .results {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid rgba(47, 125, 79, 0.22);
+      border-radius: 8px;
+      background: #eef7f0;
+    }
+
+    .result-main {
+      display: grid;
+      gap: 4px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(47, 125, 79, 0.16);
+    }
+
+    .result-label {
+      color: var(--green-dark);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .result-value {
+      color: var(--green-dark);
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .row strong {
+      color: var(--ink);
+      font-size: 15px;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      padding: 8px 10px;
+    }
+
+    button.primary {
+      border-color: var(--green);
+      background: var(--green);
+      color: #fff;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .status {
+      color: var(--danger);
+      font-size: 13px;
+      line-height: 1.35;
+      min-height: 18px;
+    }
+
+    .leaflet-marker-icon.start-marker,
+    .leaflet-marker-icon.end-marker {
+      border-radius: 999px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    @media (max-width: 860px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      #map {
+        min-height: 48vh;
+      }
+
+      .panel {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="map-wrap" aria-label="Karte">
+      <div id="map"></div>
+      <div class="map-note">
+        Tippe auf die Karte, um Start und Ziel zu setzen. Danach kannst du beide Punkte verschieben.
+      </div>
+    </section>
+
+    <aside class="panel" aria-label="Rechner">
+      <header>
+        <h1>Ausbringmenge Rechner</h1>
+        <p class="subtitle">Strecke auf der Karte wählen, Arbeitsbreite und Tankvolumen eintragen.</p>
+      </header>
+
+      <section class="section">
+        <p class="section-title">Strecke</p>
+        <label>
+          Kartenquelle
+          <select id="mapSource">
+            <option value="esri">Satellit</option>
+            <option value="topo">Topografisch</option>
+            <option value="light">Hell</option>
+            <option value="none">Ohne Karte</option>
+          </select>
+        </label>
+        <label>
+          Strecke laut Karte oder manuell in m
+          <input id="distance" type="number" min="0" step="1" inputmode="decimal" value="0">
+        </label>
+
+        <div class="choice" role="radiogroup" aria-label="Fahrweise">
+          <label>
+            <input type="radio" name="driveMode" value="1" checked>
+            <span>Einfach</span>
+          </label>
+          <label>
+            <input type="radio" name="driveMode" value="2">
+            <span>Hin und zurück</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="section">
+        <p class="section-title">Eingaben</p>
+        <label>
+          Arbeitsbreite in m
+          <input id="width" type="number" min="0" step="0.1" inputmode="decimal" value="12">
+        </label>
+        <label>
+          Tankvolumen in Liter
+          <input id="tank" type="number" min="0" step="1" inputmode="decimal" value="12000">
+        </label>
+      </section>
+
+      <section class="results" aria-live="polite">
+        <div class="result-main">
+          <span class="result-label">Maximale Ausbringmenge</span>
+          <span id="litersPerHa" class="result-value">-</span>
+        </div>
+        <div class="row">
+          <span>m3/ha</span>
+          <strong id="m3PerHa">-</strong>
+        </div>
+        <div class="row">
+          <span>Gefahrene Strecke</span>
+          <strong id="drivenDistance">-</strong>
+        </div>
+        <div class="row">
+          <span>Bearbeitete Fläche</span>
+          <strong id="area">-</strong>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="actions">
+          <button id="useLocation" class="primary" type="button">Standort</button>
+          <button id="reset" type="button">Zurücksetzen</button>
+        </div>
+        <p class="hint">Für die Karte und den aktuellen Standort braucht der Browser Internet und Standortfreigabe.</p>
+        <div id="status" class="status" role="status"></div>
+      </section>
+    </aside>
+  </main>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script>
+    const els = {
+      distance: document.querySelector("#distance"),
+      width: document.querySelector("#width"),
+      tank: document.querySelector("#tank"),
+      litersPerHa: document.querySelector("#litersPerHa"),
+      m3PerHa: document.querySelector("#m3PerHa"),
+      drivenDistance: document.querySelector("#drivenDistance"),
+      area: document.querySelector("#area"),
+      useLocation: document.querySelector("#useLocation"),
+      reset: document.querySelector("#reset"),
+      status: document.querySelector("#status"),
+      mapSource: document.querySelector("#mapSource"),
+      driveModes: [...document.querySelectorAll("input[name='driveMode']")]
+    };
+
+    const formatter = new Intl.NumberFormat("de-DE", {
+      maximumFractionDigits: 1
+    });
+
+    const integerFormatter = new Intl.NumberFormat("de-DE", {
+      maximumFractionDigits: 0
+    });
+
+    let map;
+    let startMarker;
+    let endMarker;
+    let line;
+    let tileLayer;
+
+    const mapSources = {
+      esri: {
+        url: "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        options: {
+          maxZoom: 20,
+          attribution: "Tiles &copy; Esri"
+        }
+      },
+      topo: {
+        url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+        options: {
+          maxZoom: 17,
+          attribution: "Map data &copy; OpenStreetMap, SRTM | Map style &copy; OpenTopoMap"
+        }
+      },
+      light: {
+        url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        options: {
+          maxZoom: 20,
+          attribution: "Map data &copy; OpenStreetMap | Tiles &copy; CARTO"
+        }
+      }
+    };
+
+    function numberFromInput(input) {
+      return Number(String(input.value).replace(",", ".")) || 0;
+    }
+
+    function driveFactor() {
+      return Number(document.querySelector("input[name='driveMode']:checked").value);
+    }
+
+    function formatMeters(value) {
+      if (!Number.isFinite(value)) return "-";
+      if (value >= 1000) return `${formatter.format(value / 1000)} km`;
+      return `${integerFormatter.format(value)} m`;
+    }
+
+    function formatArea(squareMeters) {
+      if (!Number.isFinite(squareMeters)) return "-";
+      const hectares = squareMeters / 10000;
+      return `${formatter.format(hectares)} ha (${integerFormatter.format(squareMeters)} m2)`;
+    }
+
+    function setStatus(message) {
+      els.status.textContent = message || "";
+    }
+
+    function updateCalculation() {
+      const baseDistance = numberFromInput(els.distance);
+      const width = numberFromInput(els.width);
+      const tank = numberFromInput(els.tank);
+      const drivenDistance = baseDistance * driveFactor();
+      const areaSquareMeters = drivenDistance * width;
+      const hectares = areaSquareMeters / 10000;
+
+      els.drivenDistance.textContent = formatMeters(drivenDistance);
+      els.area.textContent = formatArea(areaSquareMeters);
+
+      if (hectares <= 0 || tank <= 0) {
+        els.litersPerHa.textContent = "-";
+        els.m3PerHa.textContent = "-";
+        return;
+      }
+
+      const litersPerHa = tank / hectares;
+      els.litersPerHa.textContent = `${integerFormatter.format(litersPerHa)} l/ha`;
+      els.m3PerHa.textContent = `${formatter.format(litersPerHa / 1000)} m3/ha`;
+    }
+
+    function syncDistanceFromMarkers() {
+      if (!startMarker || !endMarker) return;
+      const distance = startMarker.getLatLng().distanceTo(endMarker.getLatLng());
+      els.distance.value = Math.round(distance);
+      updateLine();
+      updateCalculation();
+    }
+
+    function updateLine() {
+      if (!startMarker || !endMarker) return;
+      const points = [startMarker.getLatLng(), endMarker.getLatLng()];
+      if (!line) {
+        line = L.polyline(points, {
+          color: "#2d6f9f",
+          weight: 5,
+          opacity: 0.9
+        }).addTo(map);
+      } else {
+        line.setLatLngs(points);
+      }
+    }
+
+    function markerIcon(color) {
+      return L.divIcon({
+        className: color === "green" ? "start-marker" : "end-marker",
+        html: `<span style="display:block;width:20px;height:20px;border:3px solid white;border-radius:999px;background:${color === "green" ? "#2f7d4f" : "#d9962d"}"></span>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+    }
+
+    function addOrMovePoint(latlng) {
+      if (!startMarker) {
+        startMarker = L.marker(latlng, {
+          draggable: true,
+          icon: markerIcon("green"),
+          title: "Start"
+        }).addTo(map);
+        startMarker.on("drag", syncDistanceFromMarkers);
+        setStatus("Startpunkt gesetzt. Tippe jetzt den Zielpunkt an.");
+        return;
+      }
+
+      if (!endMarker) {
+        endMarker = L.marker(latlng, {
+          draggable: true,
+          icon: markerIcon("amber"),
+          title: "Ziel"
+        }).addTo(map);
+        endMarker.on("drag", syncDistanceFromMarkers);
+        setStatus("");
+        syncDistanceFromMarkers();
+        return;
+      }
+
+      endMarker.setLatLng(latlng);
+      syncDistanceFromMarkers();
+    }
+
+    function resetMap() {
+      if (startMarker) startMarker.remove();
+      if (endMarker) endMarker.remove();
+      if (line) line.remove();
+      startMarker = null;
+      endMarker = null;
+      line = null;
+      els.distance.value = 0;
+      setStatus("");
+      updateCalculation();
+    }
+
+    function applyMapSource() {
+      if (!map) return;
+      if (tileLayer) {
+        tileLayer.remove();
+        tileLayer = null;
+      }
+
+      const selected = els.mapSource.value;
+      if (selected === "none") {
+        setStatus("Karte ausgeblendet. Die Berechnung funktioniert mit manueller Strecke.");
+        return;
+      }
+
+      const source = mapSources[selected];
+      tileLayer = L.tileLayer(source.url, source.options).addTo(map);
+      setTimeout(() => map.invalidateSize(), 100);
+      setStatus("");
+    }
+
+    function initializeMap() {
+      if (!window.L) {
+        setStatus("Die Karte konnte nicht geladen werden. Die Berechnung funktioniert trotzdem mit manueller Strecke.");
+        updateCalculation();
+        return;
+      }
+
+      map = L.map("map", {
+        zoomControl: true
+      }).setView([49.3262, 12.1093], 14);
+
+      applyMapSource();
+      setTimeout(() => map.invalidateSize(), 100);
+
+      map.on("click", event => addOrMovePoint(event.latlng));
+    }
+
+    els.useLocation.addEventListener("click", () => {
+      if (!navigator.geolocation || !map) {
+        setStatus("Standort ist hier nicht verfügbar. Auf dem Handy klappt das bei lokalen Dateien oft nur über localhost oder eine sichere Webseite.");
+        return;
+      }
+
+      setStatus("Standort wird gesucht...");
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const latlng = [position.coords.latitude, position.coords.longitude];
+          map.setView(latlng, 16);
+          setStatus("");
+        },
+        error => {
+          const messages = {
+            1: "Standort wurde blockiert. Bei lokalen Dateien kann Chrome trotz Berechtigung sperren; über localhost oder HTTPS funktioniert es zuverlässiger.",
+            2: "Standort konnte gerade nicht ermittelt werden.",
+            3: "Standortsuche hat zu lange gedauert."
+          };
+          setStatus(messages[error.code] || "Standort konnte nicht ermittelt werden.");
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+
+    els.reset.addEventListener("click", resetMap);
+    els.mapSource.addEventListener("change", applyMapSource);
+    [els.distance, els.width, els.tank, ...els.driveModes].forEach(input => {
+      input.addEventListener("input", updateCalculation);
+      input.addEventListener("change", updateCalculation);
+    });
+
+    initializeMap();
+    updateCalculation();
+
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      navigator.serviceWorker.register("service-worker.js");
+    }
+  </script>
+</body>
+</html>
