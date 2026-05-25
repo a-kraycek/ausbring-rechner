@@ -562,6 +562,7 @@
     let endMarker;
     let line;
     let tileLayer;
+    const settingsKey = "ausbringmenge-rechner-settings";
 
     const mapSources = {
       esri: {
@@ -589,6 +590,31 @@
 
     function numberFromInput(input) {
       return Number(String(input.value).replace(",", ".")) || 0;
+    }
+
+    function saveSettings() {
+      const settings = {
+        width: els.width.value,
+        tank: els.tank.value,
+        driveMode: document.querySelector("input[name='driveMode']:checked").value,
+        mapSource: els.mapSource.value
+      };
+      localStorage.setItem(settingsKey, JSON.stringify(settings));
+    }
+
+    function loadSettings() {
+      try {
+        const settings = JSON.parse(localStorage.getItem(settingsKey) || "{}");
+        if (settings.width) els.width.value = settings.width;
+        if (settings.tank) els.tank.value = settings.tank;
+        if (settings.mapSource) els.mapSource.value = settings.mapSource;
+        if (settings.driveMode) {
+          const savedMode = document.querySelector(`input[name='driveMode'][value='${settings.driveMode}']`);
+          if (savedMode) savedMode.checked = true;
+        }
+      } catch {
+        localStorage.removeItem(settingsKey);
+      }
     }
 
     function driveFactor() {
@@ -766,12 +792,19 @@
     });
 
     els.reset.addEventListener("click", resetMap);
-    els.mapSource.addEventListener("change", applyMapSource);
+    els.mapSource.addEventListener("change", () => {
+      saveSettings();
+      applyMapSource();
+    });
     [els.distance, els.width, els.tank, ...els.driveModes].forEach(input => {
       input.addEventListener("input", updateCalculation);
-      input.addEventListener("change", updateCalculation);
+      input.addEventListener("change", () => {
+        updateCalculation();
+        saveSettings();
+      });
     });
 
+    loadSettings();
     initializeMap();
     updateCalculation();
 
