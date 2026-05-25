@@ -298,6 +298,10 @@
       background: var(--field);
     }
 
+    .choice.multi {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
     .choice input {
       position: absolute;
       opacity: 0;
@@ -474,14 +478,26 @@
           <input id="distance" type="number" min="0" step="1" inputmode="decimal" value="0">
         </label>
 
-        <div class="choice" role="radiogroup" aria-label="Fahrweise">
+        <div class="choice multi" role="radiogroup" aria-label="Streckenfaktor">
           <label>
             <input type="radio" name="driveMode" value="1" checked>
-            <span>Einfach</span>
+            <span>1x</span>
           </label>
           <label>
             <input type="radio" name="driveMode" value="2">
-            <span>Hin und zurück</span>
+            <span>2x</span>
+          </label>
+          <label>
+            <input type="radio" name="driveMode" value="3">
+            <span>3x</span>
+          </label>
+          <label>
+            <input type="radio" name="driveMode" value="4">
+            <span>4x</span>
+          </label>
+          <label>
+            <input type="radio" name="driveMode" value="6">
+            <span>6x</span>
           </label>
         </div>
       </section>
@@ -495,6 +511,10 @@
         <label>
           Tankvolumen in Liter
           <input id="tank" type="number" min="0" step="1" inputmode="decimal" value="12000">
+        </label>
+        <label>
+          Gewünschte Ausbringmenge in m3/ha
+          <input id="targetRate" type="number" min="0" step="0.1" inputmode="decimal" value="30">
         </label>
       </section>
 
@@ -514,6 +534,10 @@
         <div class="row">
           <span>Bearbeitete Fläche</span>
           <strong id="area">-</strong>
+        </div>
+        <div class="row">
+          <span>Verbrauch bei Wunschmenge</span>
+          <strong id="targetUse">-</strong>
         </div>
       </section>
 
@@ -538,10 +562,12 @@
       distance: document.querySelector("#distance"),
       width: document.querySelector("#width"),
       tank: document.querySelector("#tank"),
+      targetRate: document.querySelector("#targetRate"),
       litersPerHa: document.querySelector("#litersPerHa"),
       m3PerHa: document.querySelector("#m3PerHa"),
       drivenDistance: document.querySelector("#drivenDistance"),
       area: document.querySelector("#area"),
+      targetUse: document.querySelector("#targetUse"),
       useLocation: document.querySelector("#useLocation"),
       reset: document.querySelector("#reset"),
       status: document.querySelector("#status"),
@@ -596,6 +622,7 @@
       const settings = {
         width: els.width.value,
         tank: els.tank.value,
+        targetRate: els.targetRate.value,
         driveMode: document.querySelector("input[name='driveMode']:checked").value,
         mapSource: els.mapSource.value
       };
@@ -607,6 +634,7 @@
         const settings = JSON.parse(localStorage.getItem(settingsKey) || "{}");
         if (settings.width) els.width.value = settings.width;
         if (settings.tank) els.tank.value = settings.tank;
+        if (settings.targetRate) els.targetRate.value = settings.targetRate;
         if (settings.mapSource) els.mapSource.value = settings.mapSource;
         if (settings.driveMode) {
           const savedMode = document.querySelector(`input[name='driveMode'][value='${settings.driveMode}']`);
@@ -641,6 +669,7 @@
       const baseDistance = numberFromInput(els.distance);
       const width = numberFromInput(els.width);
       const tank = numberFromInput(els.tank);
+      const targetRate = numberFromInput(els.targetRate);
       const drivenDistance = baseDistance * driveFactor();
       const areaSquareMeters = drivenDistance * width;
       const hectares = areaSquareMeters / 10000;
@@ -648,15 +677,25 @@
       els.drivenDistance.textContent = formatMeters(drivenDistance);
       els.area.textContent = formatArea(areaSquareMeters);
 
-      if (hectares <= 0 || tank <= 0) {
+      if (hectares <= 0) {
         els.litersPerHa.textContent = "-";
         els.m3PerHa.textContent = "-";
+        els.targetUse.textContent = "-";
         return;
       }
 
-      const litersPerHa = tank / hectares;
-      els.litersPerHa.textContent = `${integerFormatter.format(litersPerHa)} l/ha`;
-      els.m3PerHa.textContent = `${formatter.format(litersPerHa / 1000)} m3/ha`;
+      if (tank > 0) {
+        const litersPerHa = tank / hectares;
+        els.litersPerHa.textContent = `${integerFormatter.format(litersPerHa)} l/ha`;
+        els.m3PerHa.textContent = `${formatter.format(litersPerHa / 1000)} m3/ha`;
+      } else {
+        els.litersPerHa.textContent = "-";
+        els.m3PerHa.textContent = "-";
+      }
+
+      els.targetUse.textContent = targetRate > 0
+        ? `${formatter.format(targetRate * hectares)} m3`
+        : "-";
     }
 
     function syncDistanceFromMarkers() {
@@ -796,7 +835,7 @@
       saveSettings();
       applyMapSource();
     });
-    [els.distance, els.width, els.tank, ...els.driveModes].forEach(input => {
+    [els.distance, els.width, els.tank, els.targetRate, ...els.driveModes].forEach(input => {
       input.addEventListener("input", updateCalculation);
       input.addEventListener("change", () => {
         updateCalculation();

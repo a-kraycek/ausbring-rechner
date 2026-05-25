@@ -1,4 +1,4 @@
-const CACHE_NAME = "ausbringmenge-rechner-v2";
+const CACHE_NAME = "ausbringmenge-rechner-v3";
 const APP_FILES = [
   "./",
   "./index.html",
