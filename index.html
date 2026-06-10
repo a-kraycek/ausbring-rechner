@@ -2,22 +2,17 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ausbringmenge Rechner</title>
   <meta name="theme-color" content="#2f7d4f">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIINfQFf9C2uM5rKz7Jb9mJ7vD7d/3YB8v0="
-    crossorigin=""
-  >
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
     :root {
       color-scheme: light;
       --bg: #f4f2ec;
-      --panel: #ffffff;
+      --panel: #fff;
       --ink: #1d2621;
       --muted: #637067;
       --line: #d7ddd4;
@@ -30,9 +25,7 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -52,7 +45,7 @@
       z-index: 0;
       overflow: hidden;
       min-width: 0;
-      min-height: 54vh;
+      min-height: 100vh;
       background: #d9e3d2;
     }
 
@@ -62,16 +55,23 @@
       min-height: 100vh;
     }
 
-    .map-note {
+    .map-tools {
       position: absolute;
       left: 16px;
       bottom: 16px;
-      z-index: 500;
-      max-width: min(520px, calc(100% - 32px));
+      z-index: 1001;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: min(620px, calc(100% - 32px));
+      align-items: center;
+    }
+
+    .map-note {
       padding: 10px 12px;
       border: 1px solid rgba(29, 38, 33, 0.12);
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.94);
       color: var(--muted);
       font-size: 14px;
       line-height: 1.35;
@@ -126,149 +126,6 @@
       font-weight: 700;
     }
 
-    .leaflet-container {
-      z-index: 0;
-    }
-
-    .leaflet-pane,
-    .leaflet-tile,
-    .leaflet-marker-icon,
-    .leaflet-marker-shadow,
-    .leaflet-tile-container,
-    .leaflet-pane > svg,
-    .leaflet-pane > canvas,
-    .leaflet-zoom-box,
-    .leaflet-image-layer,
-    .leaflet-layer {
-      position: absolute;
-      left: 0;
-      top: 0;
-    }
-
-    .leaflet-container {
-      overflow: hidden;
-      outline: 0;
-      background: #d9e3d2;
-      touch-action: pan-x pan-y;
-    }
-
-    .leaflet-tile,
-    .leaflet-marker-icon,
-    .leaflet-marker-shadow {
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    .leaflet-tile {
-      visibility: hidden;
-      border: 0;
-      filter: inherit;
-    }
-
-    .leaflet-tile-loaded {
-      visibility: inherit;
-    }
-
-    .leaflet-zoom-animated {
-      transform-origin: 0 0;
-    }
-
-    .leaflet-map-pane {
-      z-index: 400;
-    }
-
-    .leaflet-tile-pane {
-      z-index: 200;
-    }
-
-    .leaflet-overlay-pane {
-      z-index: 400;
-    }
-
-    .leaflet-shadow-pane {
-      z-index: 500;
-    }
-
-    .leaflet-marker-pane {
-      z-index: 600;
-    }
-
-    .leaflet-tooltip-pane {
-      z-index: 650;
-    }
-
-    .leaflet-popup-pane {
-      z-index: 700;
-    }
-
-    .leaflet-control {
-      position: relative;
-      z-index: 800;
-      pointer-events: visiblePainted;
-      pointer-events: auto;
-    }
-
-    .leaflet-top,
-    .leaflet-bottom {
-      position: absolute;
-      z-index: 1000;
-      pointer-events: none;
-    }
-
-    .leaflet-top {
-      top: 0;
-    }
-
-    .leaflet-right {
-      right: 0;
-    }
-
-    .leaflet-bottom {
-      bottom: 0;
-    }
-
-    .leaflet-left {
-      left: 0;
-    }
-
-    .leaflet-control-zoom {
-      margin: 12px;
-      border: 1px solid rgba(29, 38, 33, 0.18);
-      border-radius: 8px;
-      overflow: hidden;
-      background: #fff;
-      box-shadow: 0 8px 20px rgba(29, 38, 33, 0.16);
-    }
-
-    .leaflet-control-zoom a {
-      display: block;
-      width: 34px;
-      height: 34px;
-      color: var(--ink);
-      line-height: 34px;
-      text-align: center;
-      text-decoration: none;
-      font-size: 22px;
-      font-weight: 700;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .leaflet-control-zoom a:last-child {
-      border-bottom: 0;
-    }
-
-    .leaflet-control-attribution {
-      margin: 0;
-      padding: 3px 6px;
-      background: rgba(255, 255, 255, 0.82);
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .leaflet-control-attribution a {
-      color: var(--green-dark);
-    }
-
     input,
     select {
       width: 100%;
@@ -290,16 +147,12 @@
 
     .choice {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(5, 1fr);
       gap: 8px;
       padding: 4px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--field);
-    }
-
-    .choice.multi {
-      grid-template-columns: repeat(5, 1fr);
     }
 
     .choice input {
@@ -320,12 +173,6 @@
       text-align: center;
     }
 
-    .choice input:checked + span {
-      color: #fff;
-      background: var(--green);
-      box-shadow: 0 4px 12px rgba(47, 125, 79, 0.2);
-    }
-
     .choice span {
       display: flex;
       align-items: center;
@@ -334,6 +181,12 @@
       min-height: 42px;
       border-radius: 6px;
       padding: 0 8px;
+    }
+
+    .choice input:checked + span {
+      color: #fff;
+      background: var(--green);
+      box-shadow: 0 4px 12px rgba(47, 125, 79, 0.2);
     }
 
     .results {
@@ -406,10 +259,6 @@
       color: #fff;
     }
 
-    button:active {
-      transform: translateY(1px);
-    }
-
     .hint {
       margin: 0;
       color: var(--muted);
@@ -424,10 +273,132 @@
       min-height: 18px;
     }
 
-    .leaflet-marker-icon.start-marker,
-    .leaflet-marker-icon.end-marker {
+    .leaflet-container {
+      z-index: 0;
+      overflow: hidden;
+      outline: 0;
+      background: #d9e3d2;
+      touch-action: pan-x pan-y;
+    }
+
+    .leaflet-pane,
+    .leaflet-tile,
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow,
+    .leaflet-tile-container,
+    .leaflet-pane > svg,
+    .leaflet-pane > canvas,
+    .leaflet-zoom-box,
+    .leaflet-image-layer,
+    .leaflet-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .leaflet-tile,
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow {
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .leaflet-tile { visibility: hidden; border: 0; }
+    .leaflet-tile-loaded { visibility: inherit; }
+    .leaflet-zoom-animated { transform-origin: 0 0; }
+    .leaflet-map-pane { z-index: 400; }
+    .leaflet-tile-pane { z-index: 200; }
+    .leaflet-overlay-pane { z-index: 400; }
+    .leaflet-shadow-pane { z-index: 500; }
+    .leaflet-marker-pane { z-index: 600; }
+    .leaflet-tooltip-pane { z-index: 650; }
+    .leaflet-popup-pane { z-index: 700; }
+    .leaflet-control { position: relative; z-index: 800; pointer-events: auto; }
+    .leaflet-top, .leaflet-bottom { position: absolute; z-index: 1000; pointer-events: none; }
+    .leaflet-top { top: 0; }
+    .leaflet-right { right: 0; }
+    .leaflet-bottom { bottom: 0; }
+    .leaflet-left { left: 0; }
+
+    .leaflet-control-zoom {
+      margin: 12px;
+      border: 1px solid rgba(29, 38, 33, 0.18);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(29, 38, 33, 0.16);
+    }
+
+    .leaflet-control-zoom a {
+      display: block;
+      width: 34px;
+      height: 34px;
+      color: var(--ink);
+      line-height: 34px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 22px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .leaflet-control-zoom a:last-child { border-bottom: 0; }
+
+    .leaflet-control-attribution {
+      margin: 0;
+      padding: 3px 6px;
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .leaflet-control-attribution a { color: var(--green-dark); }
+
+    .start-marker,
+    .end-marker {
       border-radius: 999px;
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .line-label {
+      width: max-content;
+      min-width: 138px;
+      transform: translate(-50%, -50%);
+      padding: 7px 10px;
+      border: 1px solid rgba(29, 38, 33, 0.18);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--ink);
+      box-shadow: 0 8px 20px rgba(29, 38, 33, 0.18);
+      font-size: 13px;
+      line-height: 1.25;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .line-label strong {
+      display: block;
+      color: var(--green-dark);
+      font-size: 14px;
+    }
+
+    body.map-expanded {
+      overflow: hidden;
+    }
+
+    body.map-expanded .map-wrap {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      min-height: 100svh;
+    }
+
+    body.map-expanded #map {
+      min-height: 100svh;
+    }
+
+    body.map-expanded .panel {
+      display: none;
     }
 
     @media (max-width: 860px) {
@@ -435,14 +406,27 @@
         grid-template-columns: 1fr;
       }
 
+      .map-wrap,
       #map {
-        min-height: 48vh;
+        min-height: 68svh;
       }
 
       .panel {
         border-left: 0;
         border-top: 1px solid var(--line);
         padding: 16px;
+      }
+
+      .map-tools {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        max-width: none;
+      }
+
+      .map-note {
+        flex: 1 1 230px;
+        font-size: 13px;
       }
     }
   </style>
@@ -451,8 +435,9 @@
   <main class="app">
     <section class="map-wrap" aria-label="Karte">
       <div id="map"></div>
-      <div class="map-note">
-        Tippe auf die Karte, um Start und Ziel zu setzen. Danach kannst du beide Punkte verschieben.
+      <div class="map-tools">
+        <div class="map-note">Tippe auf die Karte, um Start und Ziel zu setzen. Punkte antippen löscht sie wieder.</div>
+        <button id="toggleMapSize" type="button">Karte groß</button>
       </div>
     </section>
 
@@ -477,28 +462,16 @@
           Strecke laut Karte oder manuell in m
           <input id="distance" type="number" min="0" step="1" inputmode="decimal" value="0">
         </label>
-
-        <div class="choice multi" role="radiogroup" aria-label="Streckenfaktor">
-          <label>
-            <input type="radio" name="driveMode" value="1" checked>
-            <span>1x</span>
-          </label>
-          <label>
-            <input type="radio" name="driveMode" value="2">
-            <span>2x</span>
-          </label>
-          <label>
-            <input type="radio" name="driveMode" value="3">
-            <span>3x</span>
-          </label>
-          <label>
-            <input type="radio" name="driveMode" value="4">
-            <span>4x</span>
-          </label>
-          <label>
-            <input type="radio" name="driveMode" value="6">
-            <span>6x</span>
-          </label>
+        <label>
+          Vorgewende in m
+          <input id="headland" type="number" min="0" step="1" inputmode="decimal" value="0">
+        </label>
+        <div class="choice" role="radiogroup" aria-label="Streckenfaktor">
+          <label><input type="radio" name="driveMode" value="1" checked><span>1x</span></label>
+          <label><input type="radio" name="driveMode" value="2"><span>2x</span></label>
+          <label><input type="radio" name="driveMode" value="3"><span>3x</span></label>
+          <label><input type="radio" name="driveMode" value="4"><span>4x</span></label>
+          <label><input type="radio" name="driveMode" value="6"><span>6x</span></label>
         </div>
       </section>
 
@@ -523,22 +496,11 @@
           <span class="result-label">Maximale Ausbringmenge</span>
           <span id="litersPerHa" class="result-value">-</span>
         </div>
-        <div class="row">
-          <span>m3/ha</span>
-          <strong id="m3PerHa">-</strong>
-        </div>
-        <div class="row">
-          <span>Gefahrene Strecke</span>
-          <strong id="drivenDistance">-</strong>
-        </div>
-        <div class="row">
-          <span>Bearbeitete Fläche</span>
-          <strong id="area">-</strong>
-        </div>
-        <div class="row">
-          <span>Verbrauch bei Wunschmenge</span>
-          <strong id="targetUse">-</strong>
-        </div>
+        <div class="row"><span>m3/ha</span><strong id="m3PerHa">-</strong></div>
+        <div class="row"><span>Strecke nach Vorgewende</span><strong id="effectiveDistance">-</strong></div>
+        <div class="row"><span>Gefahrene Strecke</span><strong id="drivenDistance">-</strong></div>
+        <div class="row"><span>Bearbeitete Fläche</span><strong id="area">-</strong></div>
+        <div class="row"><span>Verbrauch bei Wunschmenge</span><strong id="targetUse">-</strong></div>
       </section>
 
       <section class="section">
@@ -546,25 +508,23 @@
           <button id="useLocation" class="primary" type="button">Standort</button>
           <button id="reset" type="button">Zurücksetzen</button>
         </div>
-        <p class="hint">Für die Karte und den aktuellen Standort braucht der Browser Internet und Standortfreigabe.</p>
+        <p class="hint">Für Karte und Standort braucht der Browser Internet und Standortfreigabe. Auf dem Handy funktioniert Standort am besten über HTTPS.</p>
         <div id="status" class="status" role="status"></div>
       </section>
     </aside>
   </main>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const els = {
       distance: document.querySelector("#distance"),
+      headland: document.querySelector("#headland"),
       width: document.querySelector("#width"),
       tank: document.querySelector("#tank"),
       targetRate: document.querySelector("#targetRate"),
       litersPerHa: document.querySelector("#litersPerHa"),
       m3PerHa: document.querySelector("#m3PerHa"),
+      effectiveDistance: document.querySelector("#effectiveDistance"),
       drivenDistance: document.querySelector("#drivenDistance"),
       area: document.querySelector("#area"),
       targetUse: document.querySelector("#targetUse"),
@@ -572,77 +532,39 @@
       reset: document.querySelector("#reset"),
       status: document.querySelector("#status"),
       mapSource: document.querySelector("#mapSource"),
+      toggleMapSize: document.querySelector("#toggleMapSize"),
       driveModes: [...document.querySelectorAll("input[name='driveMode']")]
     };
 
-    const formatter = new Intl.NumberFormat("de-DE", {
-      maximumFractionDigits: 1
-    });
-
-    const integerFormatter = new Intl.NumberFormat("de-DE", {
-      maximumFractionDigits: 0
-    });
+    const formatter = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 });
+    const integerFormatter = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 });
+    const settingsKey = "ausbringmenge-rechner-settings";
 
     let map;
     let startMarker;
     let endMarker;
     let line;
+    let lineLabel;
     let tileLayer;
-    const settingsKey = "ausbringmenge-rechner-settings";
+    let savedSettings = {};
 
     const mapSources = {
       esri: {
         url: "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        options: {
-          maxZoom: 20,
-          attribution: "Tiles &copy; Esri"
-        }
+        options: { maxZoom: 20, attribution: "Tiles &copy; Esri" }
       },
       topo: {
         url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
-        options: {
-          maxZoom: 17,
-          attribution: "Map data &copy; OpenStreetMap, SRTM | Map style &copy; OpenTopoMap"
-        }
+        options: { maxZoom: 17, attribution: "Map data &copy; OpenStreetMap, SRTM | Map style &copy; OpenTopoMap" }
       },
       light: {
         url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-        options: {
-          maxZoom: 20,
-          attribution: "Map data &copy; OpenStreetMap | Tiles &copy; CARTO"
-        }
+        options: { maxZoom: 20, attribution: "Map data &copy; OpenStreetMap | Tiles &copy; CARTO" }
       }
     };
 
     function numberFromInput(input) {
       return Number(String(input.value).replace(",", ".")) || 0;
-    }
-
-    function saveSettings() {
-      const settings = {
-        width: els.width.value,
-        tank: els.tank.value,
-        targetRate: els.targetRate.value,
-        driveMode: document.querySelector("input[name='driveMode']:checked").value,
-        mapSource: els.mapSource.value
-      };
-      localStorage.setItem(settingsKey, JSON.stringify(settings));
-    }
-
-    function loadSettings() {
-      try {
-        const settings = JSON.parse(localStorage.getItem(settingsKey) || "{}");
-        if (settings.width) els.width.value = settings.width;
-        if (settings.tank) els.tank.value = settings.tank;
-        if (settings.targetRate) els.targetRate.value = settings.targetRate;
-        if (settings.mapSource) els.mapSource.value = settings.mapSource;
-        if (settings.driveMode) {
-          const savedMode = document.querySelector(`input[name='driveMode'][value='${settings.driveMode}']`);
-          if (savedMode) savedMode.checked = true;
-        }
-      } catch {
-        localStorage.removeItem(settingsKey);
-      }
     }
 
     function driveFactor() {
@@ -665,41 +587,114 @@
       els.status.textContent = message || "";
     }
 
-    function updateCalculation() {
-      const baseDistance = numberFromInput(els.distance);
+    function calculationValues() {
+      const measuredDistance = numberFromInput(els.distance);
+      const headland = numberFromInput(els.headland);
       const width = numberFromInput(els.width);
       const tank = numberFromInput(els.tank);
       const targetRate = numberFromInput(els.targetRate);
-      const drivenDistance = baseDistance * driveFactor();
+      const effectiveDistance = Math.max(0, measuredDistance - (2 * headland));
+      const drivenDistance = effectiveDistance * driveFactor();
       const areaSquareMeters = drivenDistance * width;
       const hectares = areaSquareMeters / 10000;
+      const litersPerHa = hectares > 0 && tank > 0 ? tank / hectares : 0;
 
-      els.drivenDistance.textContent = formatMeters(drivenDistance);
-      els.area.textContent = formatArea(areaSquareMeters);
+      return {
+        measuredDistance,
+        headland,
+        width,
+        tank,
+        targetRate,
+        effectiveDistance,
+        drivenDistance,
+        areaSquareMeters,
+        hectares,
+        litersPerHa
+      };
+    }
 
-      if (hectares <= 0) {
+    function saveSettings() {
+      const settings = {
+        width: els.width.value,
+        tank: els.tank.value,
+        targetRate: els.targetRate.value,
+        headland: els.headland.value,
+        driveMode: document.querySelector("input[name='driveMode']:checked").value,
+        mapSource: els.mapSource.value
+      };
+      if (map) {
+        const center = map.getCenter();
+        settings.mapCenter = [center.lat, center.lng];
+        settings.mapZoom = map.getZoom();
+      } else if (savedSettings.mapCenter && savedSettings.mapZoom) {
+        settings.mapCenter = savedSettings.mapCenter;
+        settings.mapZoom = savedSettings.mapZoom;
+      }
+      localStorage.setItem(settingsKey, JSON.stringify(settings));
+    }
+
+    function loadSettings() {
+      try {
+        const settings = JSON.parse(localStorage.getItem(settingsKey) || "{}");
+        savedSettings = settings;
+        if (settings.width) els.width.value = settings.width;
+        if (settings.tank) els.tank.value = settings.tank;
+        if (settings.targetRate) els.targetRate.value = settings.targetRate;
+        if (settings.headland) els.headland.value = settings.headland;
+        if (settings.mapSource) els.mapSource.value = settings.mapSource;
+        if (settings.driveMode) {
+          const savedMode = document.querySelector(`input[name='driveMode'][value='${settings.driveMode}']`);
+          if (savedMode) savedMode.checked = true;
+        }
+      } catch {
+        savedSettings = {};
+        localStorage.removeItem(settingsKey);
+      }
+    }
+
+    function updateCalculation() {
+      const values = calculationValues();
+
+      els.effectiveDistance.textContent = formatMeters(values.effectiveDistance);
+      els.drivenDistance.textContent = formatMeters(values.drivenDistance);
+      els.area.textContent = formatArea(values.areaSquareMeters);
+
+      if (values.hectares <= 0) {
         els.litersPerHa.textContent = "-";
         els.m3PerHa.textContent = "-";
         els.targetUse.textContent = "-";
+        updateLineLabel();
         return;
       }
 
-      if (tank > 0) {
-        const litersPerHa = tank / hectares;
-        els.litersPerHa.textContent = `${integerFormatter.format(litersPerHa)} l/ha`;
-        els.m3PerHa.textContent = `${formatter.format(litersPerHa / 1000)} m3/ha`;
+      if (values.tank > 0) {
+        els.litersPerHa.textContent = `${integerFormatter.format(values.litersPerHa)} l/ha`;
+        els.m3PerHa.textContent = `${formatter.format(values.litersPerHa / 1000)} m3/ha`;
       } else {
         els.litersPerHa.textContent = "-";
         els.m3PerHa.textContent = "-";
       }
 
-      els.targetUse.textContent = targetRate > 0
-        ? `${formatter.format(targetRate * hectares)} m3`
-        : "-";
+      els.targetUse.textContent = values.targetRate > 0 ? `${formatter.format(values.targetRate * values.hectares)} m3` : "-";
+      updateLineLabel();
+    }
+
+    function markerIcon(color) {
+      return L.divIcon({
+        className: color === "green" ? "start-marker" : "end-marker",
+        html: `<span style="display:block;width:22px;height:22px;border:3px solid white;border-radius:999px;background:${color === "green" ? "#2f7d4f" : "#d9962d"}"></span>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      });
     }
 
     function syncDistanceFromMarkers() {
-      if (!startMarker || !endMarker) return;
+      if (!startMarker || !endMarker) {
+        els.distance.value = 0;
+        updateLine();
+        updateCalculation();
+        return;
+      }
       const distance = startMarker.getLatLng().distanceTo(endMarker.getLatLng());
       els.distance.value = Math.round(distance);
       updateLine();
@@ -707,47 +702,110 @@
     }
 
     function updateLine() {
-      if (!startMarker || !endMarker) return;
+      if (!startMarker || !endMarker) {
+        if (line) {
+          line.remove();
+          line = null;
+        }
+        if (lineLabel) {
+          lineLabel.remove();
+          lineLabel = null;
+        }
+        return;
+      }
+
       const points = [startMarker.getLatLng(), endMarker.getLatLng()];
       if (!line) {
-        line = L.polyline(points, {
-          color: "#2d6f9f",
-          weight: 5,
-          opacity: 0.9
-        }).addTo(map);
+        line = L.polyline(points, { color: "#2d6f9f", weight: 5, opacity: 0.9 }).addTo(map);
       } else {
         line.setLatLngs(points);
       }
+      updateLineLabel();
     }
 
-    function markerIcon(color) {
-      return L.divIcon({
-        className: color === "green" ? "start-marker" : "end-marker",
-        html: `<span style="display:block;width:20px;height:20px;border:3px solid white;border-radius:999px;background:${color === "green" ? "#2f7d4f" : "#d9962d"}"></span>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+    function updateLineLabel() {
+      if (!map || !startMarker || !endMarker) {
+        if (lineLabel) {
+          lineLabel.remove();
+          lineLabel = null;
+        }
+        return;
+      }
+
+      const start = startMarker.getLatLng();
+      const end = endMarker.getLatLng();
+      const midpoint = L.latLng(
+        (start.lat + end.lat) / 2,
+        (start.lng + end.lng) / 2
+      );
+      const values = calculationValues();
+      const amount = values.litersPerHa > 0
+        ? `${formatter.format(values.litersPerHa / 1000)} m3/ha`
+        : "-";
+      const width = values.width > 0 ? `${formatter.format(values.width)} m` : "-";
+      const text = `<strong>${formatMeters(values.effectiveDistance)} / ${width} / ${driveFactor()}x</strong>${amount}`;
+      const icon = L.divIcon({
+        className: "",
+        html: `<div class="line-label">${text}</div>`,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0]
       });
+
+      if (!lineLabel) {
+        lineLabel = L.marker(midpoint, {
+          interactive: false,
+          keyboard: false,
+          icon
+        }).addTo(map);
+      } else {
+        lineLabel.setLatLng(midpoint);
+        lineLabel.setIcon(icon);
+      }
+    }
+
+    function removePoint(which) {
+      if (which === "start" && startMarker) {
+        startMarker.remove();
+        startMarker = null;
+      }
+      if (which === "end" && endMarker) {
+        endMarker.remove();
+        endMarker = null;
+      }
+      syncDistanceFromMarkers();
+      setStatus("Punkt gelöscht.");
+    }
+
+    function createMarker(latlng, which) {
+      const marker = L.marker(latlng, {
+        draggable: true,
+        icon: markerIcon(which === "start" ? "green" : "amber"),
+        title: which === "start" ? "Start" : "Ziel"
+      }).addTo(map);
+
+      marker.on("drag", syncDistanceFromMarkers);
+      marker.on("click", event => {
+        L.DomEvent.stopPropagation(event);
+        removePoint(which);
+      });
+
+      return marker;
     }
 
     function addOrMovePoint(latlng) {
       if (!startMarker) {
-        startMarker = L.marker(latlng, {
-          draggable: true,
-          icon: markerIcon("green"),
-          title: "Start"
-        }).addTo(map);
-        startMarker.on("drag", syncDistanceFromMarkers);
-        setStatus("Startpunkt gesetzt. Tippe jetzt den Zielpunkt an.");
+        startMarker = createMarker(latlng, "start");
+        if (endMarker) {
+          setStatus("");
+          syncDistanceFromMarkers();
+        } else {
+          setStatus("Startpunkt gesetzt. Tippe jetzt den Zielpunkt an.");
+        }
         return;
       }
 
       if (!endMarker) {
-        endMarker = L.marker(latlng, {
-          draggable: true,
-          icon: markerIcon("amber"),
-          title: "Ziel"
-        }).addTo(map);
-        endMarker.on("drag", syncDistanceFromMarkers);
+        endMarker = createMarker(latlng, "end");
         setStatus("");
         syncDistanceFromMarkers();
         return;
@@ -761,9 +819,11 @@
       if (startMarker) startMarker.remove();
       if (endMarker) endMarker.remove();
       if (line) line.remove();
+      if (lineLabel) lineLabel.remove();
       startMarker = null;
       endMarker = null;
       line = null;
+      lineLabel = null;
       els.distance.value = 0;
       setStatus("");
       updateCalculation();
@@ -776,13 +836,12 @@
         tileLayer = null;
       }
 
-      const selected = els.mapSource.value;
-      if (selected === "none") {
+      if (els.mapSource.value === "none") {
         setStatus("Karte ausgeblendet. Die Berechnung funktioniert mit manueller Strecke.");
         return;
       }
 
-      const source = mapSources[selected];
+      const source = mapSources[els.mapSource.value];
       tileLayer = L.tileLayer(source.url, source.options).addTo(map);
       setTimeout(() => map.invalidateSize(), 100);
       setStatus("");
@@ -795,32 +854,34 @@
         return;
       }
 
-      map = L.map("map", {
-        zoomControl: true
-      }).setView([49.3262, 12.1093], 14);
+      const initialCenter = Array.isArray(savedSettings.mapCenter)
+        ? savedSettings.mapCenter
+        : [49.3262, 12.1093];
+      const initialZoom = Number(savedSettings.mapZoom) || 14;
 
+      map = L.map("map", { zoomControl: true }).setView(initialCenter, initialZoom);
       applyMapSource();
       setTimeout(() => map.invalidateSize(), 100);
-
       map.on("click", event => addOrMovePoint(event.latlng));
+      map.on("moveend zoomend", saveSettings);
     }
 
     els.useLocation.addEventListener("click", () => {
       if (!navigator.geolocation || !map) {
-        setStatus("Standort ist hier nicht verfügbar. Auf dem Handy klappt das bei lokalen Dateien oft nur über localhost oder eine sichere Webseite.");
+        setStatus("Standort ist hier nicht verfügbar. Auf dem Handy klappt das bei lokalen Dateien oft nur über HTTPS.");
         return;
       }
 
       setStatus("Standort wird gesucht...");
       navigator.geolocation.getCurrentPosition(
         position => {
-          const latlng = [position.coords.latitude, position.coords.longitude];
-          map.setView(latlng, 16);
+          map.setView([position.coords.latitude, position.coords.longitude], 16);
+          saveSettings();
           setStatus("");
         },
         error => {
           const messages = {
-            1: "Standort wurde blockiert. Bei lokalen Dateien kann Chrome trotz Berechtigung sperren; über localhost oder HTTPS funktioniert es zuverlässiger.",
+            1: "Standort wurde blockiert. Über HTTPS funktioniert es zuverlässiger.",
             2: "Standort konnte gerade nicht ermittelt werden.",
             3: "Standortsuche hat zu lange gedauert."
           };
@@ -835,7 +896,13 @@
       saveSettings();
       applyMapSource();
     });
-    [els.distance, els.width, els.tank, els.targetRate, ...els.driveModes].forEach(input => {
+    els.toggleMapSize.addEventListener("click", () => {
+      const expanded = document.body.classList.toggle("map-expanded");
+      els.toggleMapSize.textContent = expanded ? "Karte klein" : "Karte groß";
+      setTimeout(() => map && map.invalidateSize(), 150);
+    });
+
+    [els.distance, els.headland, els.width, els.tank, els.targetRate, ...els.driveModes].forEach(input => {
       input.addEventListener("input", updateCalculation);
       input.addEventListener("change", () => {
         updateCalculation();
