@@ -237,7 +237,6 @@
 
     .actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
 
@@ -344,6 +343,39 @@
 
     .leaflet-control-zoom a:last-child { border-bottom: 0; }
 
+    .leaflet-control-location {
+      margin: 0 12px 12px;
+      border: 1px solid rgba(29, 38, 33, 0.18);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(29, 38, 33, 0.16);
+    }
+
+    .leaflet-control-location button {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      min-height: 34px;
+      border: 0;
+      border-radius: 0;
+      background: #fff;
+      color: var(--ink);
+      padding: 0;
+      line-height: 1;
+    }
+
+    .leaflet-control-location button.is-loading {
+      color: var(--green);
+    }
+
+    .leaflet-control-location svg {
+      width: 19px;
+      height: 19px;
+      pointer-events: none;
+    }
+
     .leaflet-control-attribution {
       margin: 0;
       padding: 3px 6px;
@@ -355,9 +387,20 @@
     .leaflet-control-attribution a { color: var(--green-dark); }
 
     .start-marker,
-    .end-marker {
+    .end-marker,
+    .location-marker {
       border-radius: 999px;
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .location-marker span {
+      display: block;
+      width: 20px;
+      height: 20px;
+      border: 4px solid white;
+      border-radius: 999px;
+      background: var(--blue);
+      box-shadow: 0 0 0 4px rgba(45, 111, 159, 0.2);
     }
 
     .line-label {
@@ -505,7 +548,6 @@
 
       <section class="section">
         <div class="actions">
-          <button id="useLocation" class="primary" type="button">Standort</button>
           <button id="reset" type="button">Zurücksetzen</button>
         </div>
         <p class="hint">Für Karte und Standort braucht der Browser Internet und Standortfreigabe. Auf dem Handy funktioniert Standort am besten über HTTPS.</p>
@@ -528,7 +570,6 @@
       drivenDistance: document.querySelector("#drivenDistance"),
       area: document.querySelector("#area"),
       targetUse: document.querySelector("#targetUse"),
-      useLocation: document.querySelector("#useLocation"),
       reset: document.querySelector("#reset"),
       status: document.querySelector("#status"),
       mapSource: document.querySelector("#mapSource"),
@@ -546,6 +587,8 @@
     let line;
     let lineLabel;
     let tileLayer;
+    let locationMarker;
+    let locationButton;
     let savedSettings = {};
 
     const mapSources = {
@@ -686,6 +729,91 @@
         iconSize: [22, 22],
         iconAnchor: [11, 11]
       });
+    }
+
+    function locationIcon() {
+      return L.divIcon({
+        className: "location-marker",
+        html: "<span></span>",
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+    }
+
+    function showLocation(position) {
+      const latlng = [position.coords.latitude, position.coords.longitude];
+
+      if (!locationMarker) {
+        locationMarker = L.marker(latlng, {
+          interactive: false,
+          keyboard: false,
+          icon: locationIcon(),
+          title: "Mein Standort"
+        }).addTo(map);
+      } else {
+        locationMarker.setLatLng(latlng);
+      }
+
+      map.setView(latlng, Math.max(map.getZoom(), 16));
+    }
+
+    function locateUser() {
+      if (!navigator.geolocation || !map) {
+        setStatus("Standort ist hier nicht verfügbar. Auf dem Handy klappt das bei lokalen Dateien oft nur über HTTPS.");
+        return;
+      }
+
+      if (locationButton) locationButton.classList.add("is-loading");
+      setStatus("Standort wird gesucht...");
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          showLocation(position);
+          if (locationButton) locationButton.classList.remove("is-loading");
+          saveSettings();
+          setStatus("");
+        },
+        error => {
+          const messages = {
+            1: "Standort wurde blockiert. Über HTTPS funktioniert es zuverlässiger.",
+            2: "Standort konnte gerade nicht ermittelt werden.",
+            3: "Standortsuche hat zu lange gedauert."
+          };
+          if (locationButton) locationButton.classList.remove("is-loading");
+          setStatus(messages[error.code] || "Standort konnte nicht ermittelt werden.");
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    function addLocationControl() {
+      const LocationControl = L.Control.extend({
+        options: { position: "topleft" },
+        onAdd() {
+          const container = L.DomUtil.create("div", "leaflet-control-location leaflet-bar");
+          locationButton = L.DomUtil.create("button", "", container);
+          locationButton.type = "button";
+          locationButton.title = "Meinen Standort anzeigen";
+          locationButton.setAttribute("aria-label", "Meinen Standort anzeigen");
+          locationButton.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v3"></path>
+              <path d="M12 19v3"></path>
+              <path d="M2 12h3"></path>
+              <path d="M19 12h3"></path>
+              <circle cx="12" cy="12" r="7"></circle>
+              <circle cx="12" cy="12" r="2"></circle>
+            </svg>
+          `;
+          L.DomEvent.disableClickPropagation(container);
+          L.DomEvent.on(locationButton, "click", event => {
+            L.DomEvent.stop(event);
+            locateUser();
+          });
+          return container;
+        }
+      });
+
+      map.addControl(new LocationControl());
     }
 
     function syncDistanceFromMarkers() {
@@ -860,36 +988,12 @@
       const initialZoom = Number(savedSettings.mapZoom) || 14;
 
       map = L.map("map", { zoomControl: true }).setView(initialCenter, initialZoom);
+      addLocationControl();
       applyMapSource();
       setTimeout(() => map.invalidateSize(), 100);
       map.on("click", event => addOrMovePoint(event.latlng));
       map.on("moveend zoomend", saveSettings);
     }
-
-    els.useLocation.addEventListener("click", () => {
-      if (!navigator.geolocation || !map) {
-        setStatus("Standort ist hier nicht verfügbar. Auf dem Handy klappt das bei lokalen Dateien oft nur über HTTPS.");
-        return;
-      }
-
-      setStatus("Standort wird gesucht...");
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          map.setView([position.coords.latitude, position.coords.longitude], 16);
-          saveSettings();
-          setStatus("");
-        },
-        error => {
-          const messages = {
-            1: "Standort wurde blockiert. Über HTTPS funktioniert es zuverlässiger.",
-            2: "Standort konnte gerade nicht ermittelt werden.",
-            3: "Standortsuche hat zu lange gedauert."
-          };
-          setStatus(messages[error.code] || "Standort konnte nicht ermittelt werden.");
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    });
 
     els.reset.addEventListener("click", resetMap);
     els.mapSource.addEventListener("change", () => {
